@@ -1,4 +1,57 @@
-<center>
-    <figure class="image"><img style="aspect-ratio:900/225;" src="https://assets.onecompiler.app/43a28xmes/3wxcpbe5b/01,ff.345678.jpg" width="1100" height="225"></figure>
-    <figure class="image"><img style="aspect-ratio:900/225;" src="https://assets.onecompiler.app/43a28xmes/3wxcpbe5b/mcdonalds.45656544.jpg" width="900" height="225"></figure>
-</center>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Search Engine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #ffffff;
+        }
+        .search-box {
+            width: 50%;
+            max-width: 500px;
+            display: flex;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+        }
+        button {
+            padding: 10px;
+            background: #000000;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>1Code</h1>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search...">
+        <button onclick="search()">Search</button>
+    </div>
+    <script>
+        function search() {
+            let query = document.getElementById("searchInput").value;
+            if(query) {
+                window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            }
+        }
+    </script>
+</body>
+</html>
