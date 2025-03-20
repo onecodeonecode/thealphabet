@@ -3,73 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>How High Are You?</title>
+    <title>Barcell</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { 
-            display: flex; 
-            height: 100vh; 
-            background-color: #4CBB17; 
-            color: #fff; 
-            justify-content: center; 
-            align-items: center; 
-            text-align: center; 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
             padding: 20px;
         }
-        .container {
-            background: #222;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        #scanner-container {
             width: 100%;
-            max-width: 350px;
+            max-width: 400px;
+            height: 300px;
+            margin: auto;
+            border: 2px solid #000;
         }
-        h1 { color: #FFD700; }
-        .result { 
-            margin-top: 20px; 
-            font-size: 1.4rem; 
-        }
-        button { 
-            background-color: #FF3131; 
-            border: none; 
-            color: #ffffff; 
-            padding: 10px 20px; 
-            font-size: 1.2rem; 
-            border-radius: 10px; 
-            cursor: pointer; 
+        table {
             width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-        button:hover { background-color: #4CBB17; }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+        }
+        button {
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>How High Are You?</h1>
-        <p>Click the button to find out your highness!</p>
-        <button onclick="showLevel()">Check Your Highness</button>
-        <div class="result" id="result"></div>
-    </div>
-
+    <h1>Barcell - Barcode to Excel</h1>
+    <div id="scanner-container"></div>
+    <button onclick="startScanner()">Start Scanning</button>
+    <button onclick="exportToExcel()">Export to Excel</button>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Barcode</th>
+                <th>Time Scanned</th>
+            </tr>
+        </thead>
+        <tbody id="barcode-list"></tbody>
+    </table>
     <script>
-        const levels = [
-            "Sober as a judge",
-            "Feeling a little buzzed",
-            "Getting philosophical about life",
-            "Convinced your cat is a CIA agent",
-            "You're now part of the couch",
-            "Giggling at your own thoughts",
-            "Lost in the fridge for 20 minutes",
-            "Staring at your hand... mesmerized",
-            "Talking to plants like they're your best friends",
-            "Floating in space, man..."
-        ];
+        let scannedCodes = [];
+        
+        function startScanner() {
+            Quagga.init({
+                inputStream: {
+                    type: "LiveStream",
+                    constraints: { facingMode: "environment" },
+                    target: document.querySelector("#scanner-container")
+                },
+                decoder: { readers: ["code_128_reader", "ean_reader", "upc_reader"] }
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                Quagga.start();
+            });
+            
+            Quagga.onDetected(function(result) {
+                let code = result.codeResult.code;
+                if (!scannedCodes.includes(code)) {
+                    scannedCodes.push(code);
+                    addToTable(code);
+                }
+            });
+        }
 
-        function showLevel() {
-            const randomLevel = levels[Math.floor(Math.random() * levels.length)];
-            document.getElementById('result').textContent = `Level: ${randomLevel}`;
+        function addToTable(code) {
+            let table = document.getElementById("barcode-list");
+            let row = table.insertRow();
+            row.insertCell(0).innerText = table.rows.length;
+            row.insertCell(1).innerText = code;
+            row.insertCell(2).innerText = new Date().toLocaleString();
+        }
+        
+        function exportToExcel() {
+            let table = document.querySelector("table");
+            let wb = XLSX.utils.table_to_book(table, {sheet: "Barcodes"});
+            XLSX.writeFile(wb, "barcodes.xlsx");
         }
     </script>
 </body>
 </html>
+
 
