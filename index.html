@@ -3,137 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator</title>
+    <title>Number Memory Game</title>
     <style>
         body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            background-color: #ffffff;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
             font-family: sans-serif;
         }
 
-        .calculator {
-            background-color: #000000;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            width: 300px;
-        }
-
-        .calculator-screen {
-            background-color: #ffffff;
-            color: black;
-            padding: 10px;
-            text-align: right;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 2em;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .calculator-keys {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4, 100px);
             grid-gap: 10px;
         }
 
-        .calculator-keys button {
-            background-color: #FF5733 ;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            padding: 20px;
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            border-radius: 5px;
+            user-select: none;
+        }
+
+        .card.flipped {
+            background-color: #eee;
+        }
+
+        #playAgain {
+            margin-top: 20px;
+            padding: 10px 20px;
             font-size: 1.2em;
             cursor: pointer;
-            transition: background-color 0.3s;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
         }
 
-        .calculator-keys button:hover {
-            background-color: #666;
-        }
-
-        .operator {
-            background-color: #ffa500;
-        }
-
-        .operator:hover {
-            background-color: #ffb326;
-        }
-        .clear{
-            background-color: #a9a9a9;
-        }
-        .clear:hover{
-            background-color: #c0c0c0;
-        }
-        .equals{
-            background-color: #4CBB17;
-        }
-        .equals:hover{
-            background-color: #53f553;
+        #playAgain:hover {
+            background-color: #3e8e41;
         }
     </style>
 </head>
 <body>
-    <div class="calculator">
-        <div class="calculator-screen" id="screen">0</div>
-        <div class="calculator-keys">
-            <button class="clear" onclick="clearScreen()">C</button>
-            <button onclick="appendToScreen('(')">(</button>
-            <button onclick="appendToScreen(')')">)</button>
-            <button class="operator" onclick="appendToScreen('/')">÷</button>
-
-            <button onclick="appendToScreen('7')">7</button>
-            <button onclick="appendToScreen('8')">8</button>
-            <button onclick="appendToScreen('9')">9</button>
-            <button class="operator" onclick="appendToScreen('*')">×</button>
-
-            <button onclick="appendToScreen('4')">4</button>
-            <button onclick="appendToScreen('5')">5</button>
-            <button onclick="appendToScreen('6')">6</button>
-            <button class="operator" onclick="appendToScreen('-')">-</button>
-
-            <button onclick="appendToScreen('1')">1</button>
-            <button onclick="appendToScreen('2')">2</button>
-            <button onclick="appendToScreen('3')">3</button>
-            <button class="operator" onclick="appendToScreen('+')">+</button>
-
-            <button onclick="appendToScreen('%')">%</button>
-            <button onclick="appendToScreen('0')">0</button>
-            <button onclick="appendToScreen('.')">.</button>
-            <button class="equals" onclick="calculate()">=</button>
-        </div>
-    </div>
+    <div class="grid" id="gameGrid"></div>
+    <button id="playAgain" onclick="startGame()">Play Again</button>
 
     <script>
-        let screen = document.getElementById('screen');
-        let currentInput = '';
+        let numbers = [];
+        let flippedCards = [];
+        let matchedPairs = [];
+        let cards;
 
-        function appendToScreen(value) {
-            currentInput += value;
-            screen.textContent = currentInput;
-        }
-
-        function clearScreen() {
-            currentInput = '';
-            screen.textContent = '0';
-        }
-
-        function calculate() {
-            try {
-                let result = eval(currentInput.replace('×', '*').replace('÷', '/').replace('%', '/100'));
-                if (isNaN(result) || !isFinite(result)) {
-                    screen.textContent = 'Error';
-                } else {
-                    screen.textContent = result;
-                    currentInput = result.toString();
-                }
-            } catch (error) {
-                screen.textContent = 'Error';
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
         }
+
+        function createGrid() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = ''; // Clear previous grid
+
+            numbers = [];
+            for (let i = 1; i <= 8; i++) {
+                numbers.push(i, i); // Create pairs
+            }
+            shuffle(numbers);
+
+            for (let i = 0; i < numbers.length; i++) {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.index = i;
+                card.addEventListener('click', flipCard);
+                grid.appendChild(card);
+            }
+            cards = document.querySelectorAll('.card');
+        }
+
+        function flipCard() {
+            if (flippedCards.length < 2 && !flippedCards.includes(this) && !matchedPairs.includes(this)) {
+                this.classList.add('flipped');
+                this.textContent = numbers[this.dataset.index];
+                flippedCards.push(this);
+
+                if (flippedCards.length === 2) {
+                    setTimeout(checkMatch, 500);
+                }
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            if (numbers[card1.dataset.index] === numbers[card2.dataset.index]) {
+                matchedPairs.push(card1, card2);
+                if (matchedPairs.length === numbers.length) {
+                    alert('You win!');
+                }
+            } else {
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                card1.textContent = '';
+                card2.textContent = '';
+            }
+            flippedCards = [];
+        }
+
+        function startGame() {
+            flippedCards = [];
+            matchedPairs = [];
+            createGrid();
+        }
+
+        startGame();
     </script>
 </body>
 </html>
