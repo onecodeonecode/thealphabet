@@ -3,129 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Memory Game</title>
+    <title>NFC Tag Writer</title>
     <style>
         body {
+            font-family: sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            font-family: arial;
+            padding: 20px;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(4, 75px);
-            grid-gap: 10px;
+        #inputArea {
+            width: 80%;
+            max-width: 400px;
+            margin-bottom: 20px;
         }
 
-        .card {
-            width: 75px;
-            height: 75px;
-            background-color: #000000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3em;
-            cursor: pointer;
-            border-radius: 5px;
-            user-select: none;
+        #inputArea textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
         }
 
-        .card.flipped {
-            background-color: #ffffff;
-        }
-
-        #playAgain {
-            margin-top: 20px;
+        #writeButton {
             padding: 10px 20px;
-            font-size: 1.2em;
-            cursor: pointer;
-            border-radius: 5px;
             background-color: #4CAF50;
             color: white;
             border: none;
+            cursor: pointer;
         }
 
-        #playAgain:hover {
-            background-color: #3e8e41;
+        #status {
+            margin-top: 20px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="grid" id="gameGrid"></div>
-    <button id="playAgain" onclick="startGame()">Play Again</button>
+    <h1>NFC Tag Writer</h1>
+
+    <div id="inputArea">
+        <textarea id="tagData" placeholder="Enter data to write to NFC tag"></textarea>
+    </div>
+
+    <button id="writeButton">Write to NFC Tag</button>
+
+    <div id="status"></div>
 
     <script>
-        let numbers = [];
-        let flippedCards = [];
-        let matchedPairs = [];
-        let cards;
+        async function writeNFC() {
+            const tagData = document.getElementById("tagData").value;
+            const status = document.getElementById("status");
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+            if (!("NDEFReader" in window)) {
+                status.textContent = "NFC API not supported.";
+                return;
+            }
+
+            try {
+                const ndef = new NDEFReader();
+                await ndef.write({ records: [{ id: "info", recordType: "text", data: tagData }] });
+                status.textContent = "Data written successfully!";
+
+            } catch (error) {
+                status.textContent = `Write failed: ${error}`;
             }
         }
 
-        function createGrid() {
-            const grid = document.getElementById('gameGrid');
-            grid.innerHTML = ''; // Clear previous grid
+        document.getElementById("writeButton").addEventListener("click", writeNFC);
 
-            numbers = [];
-            for (let i = 1; i <= 8; i++) {
-                numbers.push(i, i); // Create pairs
-            }
-            shuffle(numbers);
-
-            for (let i = 0; i < numbers.length; i++) {
-                const card = document.createElement('div');
-                card.classList.add('card');
-                card.dataset.index = i;
-                card.addEventListener('click', flipCard);
-                grid.appendChild(card);
-            }
-            cards = document.querySelectorAll('.card');
+        if ("NDEFReader" in window) {
+            console.log("Web NFC API supported.");
+        } else {
+            console.log("Web NFC API not supported.");
         }
 
-        function flipCard() {
-            if (flippedCards.length < 2 && !flippedCards.includes(this) && !matchedPairs.includes(this)) {
-                this.classList.add('flipped');
-                this.textContent = numbers[this.dataset.index];
-                flippedCards.push(this);
-
-                if (flippedCards.length === 2) {
-                    setTimeout(checkMatch, 500);
-                }
-            }
-        }
-
-        function checkMatch() {
-            const [card1, card2] = flippedCards;
-            if (numbers[card1.dataset.index] === numbers[card2.dataset.index]) {
-                matchedPairs.push(card1, card2);
-                if (matchedPairs.length === numbers.length) {
-                    alert('You win!');
-                }
-            } else {
-                card1.classList.remove('flipped');
-                card2.classList.remove('flipped');
-                card1.textContent = '';
-                card2.textContent = '';
-            }
-            flippedCards = [];
-        }
-
-        function startGame() {
-            flippedCards = [];
-            matchedPairs = [];
-            createGrid();
-        }
-
-        startGame();
     </script>
 </body>
 </html>
